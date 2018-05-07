@@ -259,12 +259,12 @@ if __name__ == '__main__':
     # 打开的文件名
     filename = "datingTestSet.txt"
     # # 打开并处理数据
-    # datingDataMat, datingLabels = file2matrix(filename)
-    # showdatas(datingDataMat, datingLabels)
-    # # 处理分类结果
-    # normDataSet, ranges, minVals = autoNorm(datingDataMat)
-    # print(normDataSet)
-    # print(ranges)
-    # print(minVals)
-    # datingClassTest()
+    datingDataMat, datingLabels = file2matrix(filename)
+    showdatas(datingDataMat, datingLabels)
+    # 处理分类结果
+    normDataSet, ranges, minVals = autoNorm(datingDataMat)
+    print(normDataSet)
+    print(ranges)
+    print(minVals)
+    datingClassTest()
     classifyPerson()

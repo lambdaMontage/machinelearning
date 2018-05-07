@@ -47,7 +47,6 @@ def handwritingClassTest():
         # 获得分类的数字
         classNumber = int(fileNameStr.split('_')[0])
         hwLabels.append(classNumber)
-
         # 将每一个文件的1x1024数据存储到trainingMat矩阵中
         trainingMat[i,:] = img2vector('trainingDigits/%s' % (fileNameStr))
     # 构建kNN分类器
