@@ -5,6 +5,12 @@
 # @File    : test01.py
 # @Software: PyCharm
 import numpy as np
+from functools import reduce
+
+'''
+朴素贝叶斯算法实现
+
+'''
 
 '''
 创建实验样本
@@ -38,12 +44,14 @@ Returns:
     returnVec - 文档向量,词集模型
 '''
 
+
 def setOfWords2Vec(vocabList, inputSet):
-    returnVec = [0] * len(vocabList)                                    #创建一个其中所含元素都为0的向量
-    for word in inputSet:                                                #遍历每个词条
-        if word in vocabList:                                            #如果词条存在于词汇表中，则置1
+    returnVec = [0] * len(vocabList)  # 创建一个其中所含元素都为0的向量
+    for word in inputSet:  # 遍历每个词条
+        if word in vocabList:  # 如果词条存在于词汇表中，则置1
             returnVec[vocabList.index(word)] = 1
-        else: print("the word: %s is not in my Vocabulary!" % word)
+        else:
+            print("the word: %s is not in my Vocabulary!" % word)
     return returnVec
 
 
@@ -100,16 +108,58 @@ def trainNB0(trainMatrix, trainCategory):
     return p0Vect, p1Vect, pAbusive
 
 
-if __name__ == '__main__':
-    postingList, classVec = loadDataSet()
-    myVocabList = createVocabList(postingList)
+'''
+朴素贝叶斯分类器分类函数
+
+Parameters:
+    vec2Classify - 待分类的词条数组
+    p0Vec - 侮辱类的条件概率数组
+    p1Vec -非侮辱类的条件概率数组
+    pClass1 - 文档属于侮辱类的概率
+Returns:
+    0 - 属于非侮辱类
+    1 - 属于侮辱类
+
+'''
+
+
+def classifyNB(v2Classify, p0vec, p1vec, pclass1):
+    # 对应元素相乘
+    p1 = reduce(lambda x, y: x * y, v2Classify * p1vec) * pclass1
+    p0 = reduce(lambda x, y: x * y, v2Classify * p0vec) * (1 - pclass1)
+    if p1 > p0:
+        return 1
+    else:
+        return 0
+
+
+def testingNB():
+    # 创建实验样本
+    listOPosts, listClasses = loadDataSet()
+    # 创建词汇列表
+    myVocabList = createVocabList(listOPosts)
     print("myVocabList:\n", myVocabList)
     trainMat = []
-    for postinDoc in postingList:
+    # 将实验样本向量化
+    for postinDoc in listOPosts:
         trainMat.append(setOfWords2Vec(myVocabList, postinDoc))
     print("trainMat:\n", trainMat)
-    p0V, p1V, pAb = trainNB0(trainMat, classVec)
-    print('p0V:\n', p0V)
-    print('p1V:\n', p1V)
-    print('classVec:\n', classVec)
-    print('pAb:\n', pAb)
+    # 训练分类器
+    p0V, p1V, pAb = trainNB0(trainMat, listClasses)
+    testEnty = ['love', 'my', 'dalmation']
+    # 测试样本向量化
+    thisDoc = np.array(setOfWords2Vec(myVocabList, testEnty))
+    if classifyNB(thisDoc, p0V, p1V, pAb):
+        print(testEnty, '属于侮辱类')
+    else:
+        print(testEnty, '属于非侮辱类')
+    testEnty = ['stupid', 'garbage']
+    thisDoc = np.array(setOfWords2Vec(myVocabList, testEnty))
+    if classifyNB(thisDoc, p0V, p1V, pAb):
+        print(testEnty, '属于侮辱类')
+    else:
+        print(testEnty, '属于非侮辱类')
+
+
+if __name__ == '__main__':
+    testingNB()
