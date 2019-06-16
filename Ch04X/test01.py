@@ -68,6 +68,7 @@ Returns:
 def createVocabList(dataSet):
     vocabSet = set([])
     for document in dataSet:
+        # 取并集
         vocabSet = vocabSet | set(document)
     return list(vocabSet)
 
@@ -86,25 +87,22 @@ Returns:
 
 
 def trainNB0(trainMatrix, trainCategory):
-    numTrainMax = len(trainMatrix)
-    numWords = len(trainMatrix[0])
-    pAbusive = sum(trainCategory) / float(numTrainMax)
-    # 创建0向量矩阵 和分母
+    numTrainDocs = len(trainMatrix)  # 计算训练的文档数目
+    numWords = len(trainMatrix[0])  # 计算每篇文档的词条数
+    pAbusive = sum(trainCategory) / float(numTrainDocs)  # 文档属于侮辱类的概率
     p0Num = np.zeros(numWords);
-    p1Num = np.zeros(numWords)
-    p0Same = 0.0;
-    p1Same = 0.0
-    for i in range(numTrainMax):
-        # 统计侮辱性条件所需要的概率
-        if (trainCategory[i]) == 1:
+    p1Num = np.zeros(numWords)  # 创建numpy.zeros数组,词条出现数初始化为0
+    p0Denom = 0.0;
+    p1Denom = 0.0  # 分母初始化为0
+    for i in range(numTrainDocs):
+        if trainCategory[i] == 1:  # 统计属于侮辱类的条件概率所需的数据，即P(w0|1),P(w1|1),P(w2|1)···
             p1Num += trainMatrix[i]
-            p1Same += sum(trainMatrix[i])
-        else:
-            p0Num += trainCategory[i]
-            p0Same += sum(trainMatrix[i])
-    p1Vect = p1Num / p1Same
-    p0Vect = p0Num / p0Same
-    # 返回侮辱类条件概率数组，非侮辱类条件概率数组 ，文档属于侮辱类条件概率
+            p1Denom += sum(trainMatrix[i])
+        else:  # 统计属于非侮辱类的条件概率所需的数据，即P(w0|0),P(w1|0),P(w2|0)···
+            p0Num += trainMatrix[i]
+            p0Denom += sum(trainMatrix[i])
+    p1Vect = p1Num / p1Denom
+    p0Vect = p0Num / p0Denom
     return p0Vect, p1Vect, pAbusive
 
 
@@ -131,6 +129,13 @@ def classifyNB(v2Classify, p0vec, p1vec, pclass1):
         return 1
     else:
         return 0
+
+
+'''
+朴素贝叶斯分类器分类函数
+
+
+'''
 
 
 def testingNB():
@@ -161,5 +166,74 @@ def testingNB():
         print(testEnty, '属于非侮辱类')
 
 
+'''
+朴素贝叶斯函数修改版
+Parameters:
+    trainMatrix - 训练文档矩阵，即setOfWords2Vec返回的returnVec构成的矩阵
+    trainCategory - 训练类别标签向量，即loadDataSet返回的classVec
+Returns:
+    p0Vect - 侮辱类的条件概率数组
+    p1Vect - 非侮辱类的条件概率数组
+    pAbusive - 文档属于侮辱类的概率
+'''
+
+
+def trainNB0Edit(trainMatrix, trainCategory):
+    numTrainMax = len(trainMatrix)
+    numWords = len(trainMatrix[0])
+    pAbusive = sum(trainCategory) / float(numTrainMax)
+    # 创建numpy.ones数组,词条出现数初始化为1，拉普拉斯平滑
+    p0Num = np.ones(numWords);
+    p1Num = np.ones(numWords)
+    # 分母初始化为2, 拉普拉斯平滑
+    p0Same = 2.0;
+    p1Same = 2.0
+    for i in range(numTrainMax):
+        # 统计侮辱性条件所需要的概率 即p(w0|1) p(w1|1)..
+        if (trainCategory[i]) == 1:
+            p1Num += trainMatrix[i]
+            p1Same += sum(trainMatrix[i])
+        else:
+            p0Num += trainCategory[i]
+            p0Same += sum(trainMatrix[i])
+    # 取对数 防止向下溢出
+    p1Vect = np.log(p1Num / p1Same)
+    p0Vect = np.log(p0Num / p0Same)
+    # 返回侮辱类条件概率数组，非侮辱类条件概率数组 ，文档属于侮辱类条件概率
+    return p0Vect, p1Vect, pAbusive
+
+
+'''
+朴素贝叶斯函数分类器分类函数修改版
+Parameters:
+    vec2Classify - 待分类的词条数组
+    p0Vec - 侮辱类的条件概率数组
+    p1Vec -非侮辱类的条件概率数组
+    pClass1 - 文档属于侮辱类的概率
+Returns:
+    0 - 属于非侮辱类
+    1 - 属于侮辱类
+'''
+
+
+def classifNBTest(vec2Classify, p0Vec, p1Vec, pClass1):
+    p1 = sum(vec2Classify * p1Vec) + np.log(pClass1)
+    p0 = sum(vec2Classify * p0Vec) + np.log(1 - pClass1)
+    if p1 > p0:
+        return 1
+    else:
+        return 0
+
+
 if __name__ == '__main__':
-    testingNB()
+    postingList, classVec = loadDataSet()
+    myVocabList = createVocabList(postingList)
+    print('myVocabList:\n', myVocabList)
+    trainMat = []
+    for postinDoc in postingList:
+        trainMat.append(setOfWords2Vec(myVocabList, postinDoc))
+    p0V, p1V, pAb = trainNB0Edit(trainMat, classVec)
+    print('p0V:\n', p0V)
+    print('p1V:\n', p1V)
+    print('classVec:\n', classVec)
+    print('pAb:\n', pAb)

@@ -12,3 +12,13 @@ class Dict(dict):
 
     def __setattr__(self, key, value):
         self[key] = value
+
+
+def test():
+    width = 20
+    ls = 'asasas' / 3 + '1234'
+    print(ls)
+
+
+if __name__ == '__main__':
+    test()

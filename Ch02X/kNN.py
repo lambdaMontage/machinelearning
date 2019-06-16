@@ -1,5 +1,8 @@
 import numpy as np
 import operator
+import urllib.request
+import http.cookiejar
+
 
 '''
     K-邻近算法简介
@@ -65,9 +68,14 @@ def classify0(inX, dataSet, lables, k):
 
 
 if __name__ == '__main__':
-    group, labels = createDataSet()
-    test = [101, 20]
-    test_class = classify0(test, group, labels, 3)
-    print(test_class)
-
+    # group, labels = createDataSet()
+    # test = [101, 20]
+    # test_class = classify0(test, group, labels, 3)
+    # print(test_class)
+    cookie = http.cookiejar.CookieJar()
+    handler = urllib.request.HTTPCookieProcessor(cookie)
+    opener = urllib.request.build_opener(handler)
+    response =opener.open('http://www.baidu.com')
+    for item in cookie:
+        print(item.name + ":::" + item.value)
 
